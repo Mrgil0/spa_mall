@@ -25,16 +25,14 @@ router.post('/:_postId', async (req, res) => {
     if(posts.length <= 0){
         return res.status(400).json({success: false, message: '게시글 조회에 실패하였습니다.'});
     }
-    let commentId = 0;
-    const comments = await Comments.find()
-    if(comments.length <= 0){
-        commentId = 1;
-    } else{
+    let commentId = 1;
+    const comments = await Comments.find().sort({commentId: 1});
+    if(comments.length > 0){
         for(let i=0; i<comments.length; i++) {
             let temp = comments[i]['commentId']
-            if (temp > commentId) {
-                commentId = temp
-            }  //db의 index중 제일 큰값이 idx가 됨
+            if (temp - commentId >= 1) {
+                break;
+            }  //db의 index중 비어있는 제일 작은 값이 commentId가 됨
             commentId++
         }
     }

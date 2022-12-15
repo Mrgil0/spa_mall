@@ -14,20 +14,18 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const { user, password, title, content } = req.body;
-    let postId = 0
     if ([user, password, title, content].includes('')){
         return res.status(400).json({success: false, message: '메세지 형식이 올바르지 않습니다.'});
     }
-    const posts = await Posts.find()
-    if(posts.length <= 0){
-        postId = 1;
-    } else{
+    const posts = await Posts.find().sort({postId: 1});
+    let postId = 1;
+    if(posts.length > 0){
         for(let i=0; i<posts.length; i++) {
             let temp = posts[i]['postId']
-            if (temp > postId) {
-                postId = temp
-            }  //db의 index중 제일 큰값이 idx가 됨
-            postId++
+                if (temp - postId >= 1) {
+                    break;
+                }  //db의 index중 비어있는 제일 작은 값이 postId 됨
+            postId++;
         }
     }
     
