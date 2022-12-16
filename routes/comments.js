@@ -1,6 +1,7 @@
 const { Console } = require('console');
 const express = require('express');
 const router = express.Router();
+const moment = require('moment');
 const Comments = require('../schemas/comment');
 const Posts = require('../schemas/post');
 
@@ -36,9 +37,8 @@ router.post('/:_postId', async (req, res) => {
             commentId++
         }
     }
-    const createdAt = new Date();
-    const createdPosts = await Comments.create({commentId: commentId, postId: _postId, user: user, 
-                                                password: password, content: content, createdAt: createdAt});
+    const createdAt = moment().format('YYYY년 MM월 DD일 hh:mm:ss');
+    const createdPosts = await Comments.create({commentId: commentId, postId: _postId, user: user, password: password, content: content, createdAt: createdAt});
     
     res.json({success: true, message: '댓글을 생성하였습니다.'})
 })

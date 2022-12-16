@@ -1,6 +1,7 @@
 const { Console } = require('console');
 const express = require('express');
 const router = express.Router();
+const moment = require('moment');
 const Posts = require('../schemas/post');
 const Comments = require('../schemas/comment');
 
@@ -29,7 +30,7 @@ router.post('/', async (req, res) => {
         }
     }
     
-    const createdAt = new Date();
+    const createdAt = moment().format('YYYY년 MM월 DD일 hh:mm:ss');
     const createdPosts = await Posts.create({postId, user, password, title, content, createdAt});
     
     res.json({success: true, message: '게시글을 생성하였습니다.'})
