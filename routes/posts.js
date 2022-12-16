@@ -48,11 +48,11 @@ router.get('/:_postId', async (req, res) => {
 
 router.put('/:_postId', async (req,res) => {
     const {_postId} = req.params;
-    const {password, title, content} = req.body;
+    const {user, password, title, content} = req.body;
     const posts = await Posts.findOne({postId: Number(_postId)});
     if(posts){
-        if(posts.password === password){
-            const modifyAt = new Date();
+        if(posts.password === password && posts.user === user){
+            const modifyAt = moment().format('YYYY년 MM월 DD일 hh:mm:ss');
             await Posts.updateOne({title: title}, {content: content}, {createdAt: modifyAt});
             res.json({success: true, message: '게시글을 수정하였습니다.'})
         } else{
