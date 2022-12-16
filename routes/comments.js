@@ -53,7 +53,7 @@ router.put('/:_commentId', async (req,res) => {
     if(comments){
         if(comments.password === password){
             const modifyAt = moment().format('YYYY년 MM월 DD일 hh:mm:ss');
-            await Comments.updateOne({commentId: Number(_commentId)}, {content: content}, {createdAt: modifyAt});
+            await Comments.updateOne({commentId: Number(_commentId)}, {content: content, createdAt: modifyAt});
             res.json({success: true, message: '게시글을 수정하였습니다.'})
         } else{
             return res.status(400).json({success: false, message: '데이터 형식이 올바르지 않습니다.'})
