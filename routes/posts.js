@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
         }
     }
     
-    const utc = moment.utc().format('YYYY년 MM월 DD일 hh:mm:ss');
+    const utc = moment.utc().format();
     const createdAt = moment(utc).local().format('YYYY년 MM월 DD일 hh:mm:ss');
     const createdPosts = await Posts.create({postId, user, password, title, content, createdAt});
     
