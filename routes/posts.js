@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     }
     
     var utc = moment.utc();
-    const createdAt = utc.local().format();
+    const createdAt = utc.local().format('YYYY년 MM월 DD일 hh:mm:ss');
     const createdPosts = await Posts.create({postId, user, password, title, content, createdAt});
     
     res.json({success: true, message: '게시글을 생성하였습니다.'})
