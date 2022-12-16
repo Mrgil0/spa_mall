@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
         }
     }
     
-    const createdAt = moment.utc(new Date()).format('YYYY년 MM월 DD일 hh:mm:ss');
+    const createdAt = moment.local().format('YYYY년 MM월 DD일 hh:mm:ss');
     const createdPosts = await Posts.create({postId, user, password, title, content, createdAt});
     
     res.json({success: true, message: '게시글을 생성하였습니다.'})
@@ -53,7 +53,7 @@ router.put('/:_postId', async (req,res) => {
     const posts = await Posts.findOne({postId: Number(_postId)});
     if(posts){
         if(posts.password === password && posts.user === user){
-            const modifyAt = moment().format('YYYY년 MM월 DD일 hh:mm:ss');
+            const modifyAt = moment.local().format('YYYY년 MM월 DD일 hh:mm:ss');
             await Posts.updateOne({postId: Number(_postId)}, {$set: {title: title, content: content, createdAt: modifyAt}});
             res.json({success: true, message: '게시글을 수정하였습니다.'})
         } else{
