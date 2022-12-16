@@ -31,8 +31,8 @@ router.post('/', async (req, res) => {
         }
     }
     
-    const utc = moment.utc();
-    const createdAt = utc.local().format('YYYY년 MM월 DD일 hh:mm:ss');
+    var utc = moment.utc();
+    const createdAt = utc.local().format();
     const createdPosts = await Posts.create({postId, user, password, title, content, createdAt});
     
     res.json({success: true, message: '게시글을 생성하였습니다.'})
