@@ -1,46 +1,46 @@
-const { Console } = require('console');
 const express = require('express');
 const router = express.Router();
 const moment = require('moment');
-const Posts = require('../schemas/post');
-const Comments = require('../schemas/comment');
-const { utc } = require('moment');
-
-router.get('/', async (req, res) => {
-    const posts = await Posts.find().sort({createdAt: -1});
-
-    res.json({
-        data: posts
-    })
+const Sequelize = require('sequelize');
+const { post } = require('../models');
+const { like } = require('../models');
+const authMiddleware = require("../middlewares/auth-middleware");
+const user = require('../models/user');
+const sequelize = new Sequelize("database_development", "admin", "spa142857",{
+    host: "sparta-gil.cylo4tomjgga.ap-northeast-2.rds.amazonaws.com",
+    dialect: "mysql",
 });
 
-router.post('/', async (req, res) => {
-    const { user, password, title, content } = req.body;
-    if ([user, password, title, content].includes('')){
-        return res.status(400).json({success: false, message: '메세지 형식이 올바르지 않습니다.'});
+
+router.get('/', async (req, res) => {
+    const posts = await post.findAll({
+        order: [['createdAt', 'DESC' ]],
+    });
+    if(posts.length > 0) {
+        res.json({
+            data: posts
+        })
+    }else{
+        return res.status(400).json({success: false, message: '게시글이 없습니다.'});
+    }    
+});
+
+router.post('/', authMiddleware, async (req, res) => {
+    const {title, content } = req.body;
+    if ([title, content].includes('')){
+        return res.status(400).json({success: false, message: '게시글 형식이 올바르지 않습니다.'});
     }
-    const posts = await Posts.find().sort({postId: 1});
-    let postId = 1;
-    if(posts.length > 0){
-        for(let i=0; i<posts.length; i++) {
-            let temp = posts[i]['postId']
-                if (temp - postId >= 1) {
-                    break;
-                }  //db의 index중 비어있는 제일 작은 값이 postId 됨
-            postId++;
-        }
-    }
-    
-    var utc = moment.utc();
-    const createdAt = utc.local().format('YYYY년 MM월 DD일 hh:mm:ss');
-    const createdPosts = await Posts.create({postId, user, password, title, content, createdAt});
+    const userId  = res.locals.user.userId;
+    const like = 0;
+    var createdAt = moment.utc();
+    const createdPosts = await post.create({ userId, title, content, like, createdAt});
     
     res.json({success: true, message: '게시글을 생성하였습니다.'})
 })
 
-router.get('/:_postId', async (req, res) => {
-    const {_postId} = req.params;
-    const posts = await Posts.findOne({postId: Number(_postId)});
+router.get('/:postId', async (req, res) => {
+    const {postId} = req.params;
+    const posts = await post.findOne({where: {postId: Number(postId)}});
     if(posts){
         return res.json({'data': posts});
     }else{
@@ -48,37 +48,85 @@ router.get('/:_postId', async (req, res) => {
     }
 })
 
-router.put('/:_postId', async (req,res) => {
-    const {_postId} = req.params;
-    const {user, password, title, content} = req.body;
-    const posts = await Posts.findOne({postId: Number(_postId)});
+router.put('/:postId', authMiddleware, async (req,res) => {
+    const {postId} = req.params;
+    const { title, content} = req.body;
+    const user  = res.locals.user;
+    const posts = await post.findOne({where: {postId: Number(postId)}});
     if(posts){
-        if(posts.password === password && posts.user === user){
-            const modifyAt = moment.utc().local().format('YYYY년 MM월 DD일 hh:mm:ss');
-            await Posts.updateOne({postId: Number(_postId)}, {$set: {title: title, content: content, createdAt: modifyAt}});
+        if(posts.userId === user.userId){
+            const modifyAt = moment.utc();
+            await post.update({title: title, content: content, modifyAt: modifyAt}, {where: {postId: Number(postId)}});
             res.json({success: true, message: '게시글을 수정하였습니다.'})
         } else{
-            return res.status(400).json({success: false, message: '데이터 형식이 올바르지 않습니다.'})
+            return res.status(400).json({success: false, message: '본인이 쓴 글이 아닙니다.'})
         }
     } else{
-        return res.status(404).json({success: false, message: '게시글 조회에 실패하였습니다.'})
+        return res.status(404).json({success: false, message: '게시글 수정에 실패하였습니다.'})
     }
 })
 
-router.delete('/:_postId', async (req,res) => {
-    const {_postId} = req.params;
-    const { password } = req.body;
-    const posts = await Posts.findOne({postId: Number(_postId)});
+router.put('/:postId/like', authMiddleware, async (req,res) => {
+    const {postId} = req.params;
+    const userId  = res.locals.user.userId;
+    const posts = await post.findOne({where: {postId: Number(postId)}});
     if(posts){
-        if(posts.password === password){
-            await Posts.deleteOne({postId: Number(_postId)})
-            await Comments.deleteMany({postId: Number(_postId)});
+        const likes = await like
+                    .findOne({where: {
+                            postId: Number(postId),
+                            userId: userId
+                    }})
+        if(likes){
+            console.log('취소 전 현재 좋아요 수:' + posts.like)
+            posts.like = posts.like - 1;
+            await posts.save();
+            await like.destroy({where: {
+                            postId: Number(postId),
+                            userId: userId
+                        }})
+            res.json({success: true, message: '게시글의 좋아요를 취소하였습니다.'})
+        } else{
+            console.log('등록 전 현재 좋아요 수:' +posts.like)
+            posts.like = posts.like + 1;
+            await posts.save();
+            await like.create({postId, userId})
+            res.json({success: true, message: '게시글의 좋아요를 등록하였습니다.'})
+        }
+        
+    } else{
+        return res.status(404).json({success: false, message: '게시글이 존재하지 않습니다.'})
+    }
+})
+
+router.patch('/like', authMiddleware, async (req, res) => {
+    const userId = res.locals.user.userId;
+    const posts = await sequelize.query(
+        `SELECT p.postId, p.userId, u.nickname, p.title, p.content, p.createdAt, p.updatedAt, p.like 
+        FROM posts p INNER JOIN likes l ON p.postId = l.postId INNER JOIN users u ON ` + userId + ` = u.userId
+        WHERE ` + userId + ` = l.userId`,
+        {
+            raw:true,
+            nest:true,
+        }
+    )
+    console.log(posts)
+    res.json(posts);
+})
+
+router.delete('/:postId', authMiddleware, async (req,res) => {
+    const {postId} = req.params;
+    const user  = res.locals.user;
+    const posts = await post.findOne({where: {postId: Number(postId)}});
+    if(posts){
+        if(user.userId === posts.userId){
+            await post.destroy({where : {postId: Number(postId)}})
+            // await Comment.deleteMany({postId: Number(_postId)});
             res.json({success: true, message: '게시글을 삭제하였습니다.'})
         } else{
-            return res.status(400).json({success: false, message: '데이터 형식이 올바르지 않습니다.'})
+            return res.status(400).json({success: false, message: '본인이 쓴 글이 아닙니다.'})
         }
     } else{
-        return res.status(404).json({success: false, message: '게시글 조회에 실패하였습니다.'})
+        return res.status(404).json({success: false, message: '게시글이 존재하지 않습니다.'})
     }
 })
 
