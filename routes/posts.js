@@ -13,6 +13,8 @@ const sequelize = new Sequelize("database_development", "admin", "spa142857",{
 
 
 router.get('/', async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/posts
+    // body : X
     const posts = await post.findAll({
         order: [['createdAt', 'DESC' ]],
     });
@@ -26,6 +28,8 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', authMiddleware, async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/posts
+    // body : {"title": "글제목", "content": "안녕하세요 4번째 글입니다."}
     const {title, content } = req.body;
     if ([title, content].includes('')){
         return res.status(400).json({success: false, message: '게시글 형식이 올바르지 않습니다.'});
@@ -39,6 +43,8 @@ router.post('/', authMiddleware, async (req, res) => {
 })
 
 router.get('/:postId', async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/posts/10
+    // body : X
     const {postId} = req.params;
     const posts = await post.findOne({where: {postId: Number(postId)}});
     if(posts){
@@ -49,6 +55,8 @@ router.get('/:postId', async (req, res) => {
 })
 
 router.put('/:postId', authMiddleware, async (req,res) => {
+    // Thunder Client api : sparta-gil.shop/posts/10
+    // body : {"content": "안녕하세요 수정된 글입니다."}
     const {postId} = req.params;
     const { title, content} = req.body;
     const user  = res.locals.user;
@@ -67,6 +75,8 @@ router.put('/:postId', authMiddleware, async (req,res) => {
 })
 
 router.put('/:postId/like', authMiddleware, async (req,res) => {
+    // Thunder Client api : sparta-gil.shop/posts/10/like
+    // body : X
     const {postId} = req.params;
     const userId  = res.locals.user.userId;
     const posts = await post.findOne({where: {postId: Number(postId)}});
@@ -99,6 +109,9 @@ router.put('/:postId/like', authMiddleware, async (req,res) => {
 })
 
 router.patch('/like', authMiddleware, async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/posts/like
+    // body : X
+    // 글 상세보기와 겹쳐서 get을 patch로 변경
     const userId = res.locals.user.userId;
     const posts = await sequelize.query(
         `SELECT p.postId, p.userId, u.nickname, p.title, p.content, p.createdAt, p.updatedAt, p.like 
@@ -109,18 +122,19 @@ router.patch('/like', authMiddleware, async (req, res) => {
             nest:true,
         }
     )
-    console.log(posts)
     res.json(posts);
 })
 
 router.delete('/:postId', authMiddleware, async (req,res) => {
+    // Thunder Client api : sparta-gil.shop/posts/10
+    // body : X
     const {postId} = req.params;
     const user  = res.locals.user;
     const posts = await post.findOne({where: {postId: Number(postId)}});
     if(posts){
         if(user.userId === posts.userId){
             await post.destroy({where : {postId: Number(postId)}})
-            // await Comment.deleteMany({postId: Number(_postId)});
+            await comment.destroy({postId: Number(postId)});
             res.json({success: true, message: '게시글을 삭제하였습니다.'})
         } else{
             return res.status(400).json({success: false, message: '본인이 쓴 글이 아닙니다.'})

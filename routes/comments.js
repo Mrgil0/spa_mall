@@ -6,6 +6,8 @@ const { post } = require('../models');
 const authMiddleware = require("../middlewares/auth-middleware");
 
 router.get('/:postId', async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/comments/10
+    // body : X
     const { postId } = req.params;
     const comnments = await comment.findAll({
         where: { postId: postId },
@@ -64,6 +66,8 @@ router.put('/:commentId', authMiddleware, async (req,res) => {
 })
 
 router.delete('/:commentId', authMiddleware, async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/comments/5
+    // body : X
     const {commentId} = req.params;
     const userId  = res.locals.user.userId;
     const comments = await comment.findOne({where: {commentId: Number(commentId)}});
