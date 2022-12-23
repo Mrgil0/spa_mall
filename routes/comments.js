@@ -29,7 +29,7 @@ router.post('/:postId', authMiddleware, async (req, res) => {
         return res.status(400).json({success: false, message: '댓글 내용을 입력해주세요.'});
     }
     const posts = await post.findOne({where: {postId: postId}});
-    if(posts.length <= 0){
+    if(posts){
         return res.status(400).json({success: false, message: '게시글이 존재하지 않습니다.'});
     }
     const createdAt = moment().utc();
