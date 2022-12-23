@@ -4,13 +4,15 @@ const router = express.Router();
 const { user } = require('../models');
 
 router.post('/login', async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/users/login
+    // body : {"nickname": "Developer", "password": "1234"}
     const { nickname, password } = req.body;
 
     const existUsers = await user.findOne({
         where: { nickname: nickname, password: password}
     });
     if(!existUsers){
-        return res.status(400).json({success: false, message: '아이디 또는 패스워드가 틀립니다.'})
+        return res.status(412).json({success: false, message: '아이디 또는 패스워드가 틀립니다.'})
     }
 
     const accessToken = await jwt.sign({userId: existUsers.nickname}, 'sparta-secret-key', {expiresIn: '1d'})
@@ -24,6 +26,8 @@ router.post('/login', async (req, res) => {
 })
 
 router.post('/signup', async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/users/signup
+    // body : {"nickname": "Developer", "password": "1234", "confirmPassword": "1234"}
     const { nickname, password, confirmPassword } = req.body;
     const idRegex = /^[a-zA-Z0-9]{3,15}$/     // 영어 & 숫자가 나오면서 3-15글자 사이여야 통과됨
     const pwRegex = /^[a-zA-Z0-9]{4,15}$/

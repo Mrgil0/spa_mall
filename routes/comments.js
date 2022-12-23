@@ -18,7 +18,7 @@ router.get('/:postId', async (req, res) => {
             data: comnments
         })
     }else{
-        return res.status(400).json({success: false, message: '댓글이 없습니다.'});
+        return res.status(404).json({success: false, message: '댓글이 없습니다.'});
     }    
 })
 
@@ -30,11 +30,11 @@ router.post('/:postId', authMiddleware, async (req, res) => {
     const userId  = res.locals.user.userId;
 
     if(content === ''){
-        return res.status(400).json({success: false, message: '댓글 내용을 입력해주세요.'});
+        return res.status(412).json({success: false, message: '댓글 내용을 입력해주세요.'});
     }
     const posts = await post.findOne({where: {postId: postId}});
     if(!posts){
-        return res.status(400).json({success: false, message: '게시글이 존재하지 않습니다.'});
+        return res.status(404).json({success: false, message: '게시글이 존재하지 않습니다.'});
     }
     const createdAt = moment().utc();
     await comment.create({postId, userId, comment: content, createdAt});
@@ -49,7 +49,7 @@ router.put('/:commentId', authMiddleware, async (req,res) => {
     const content = req.body.content;
     const userId  = res.locals.user.userId;
     if(content === ''){
-        return res.status(400).json({success: false, message: '댓글 내용을 입력해주세요.'})
+        return res.status(412).json({success: false, message: '댓글 내용을 입력해주세요.'})
     }
     const comments = await comment.findOne({where: {commentId: Number(commentId)}});
     if(comments){
@@ -58,7 +58,7 @@ router.put('/:commentId', authMiddleware, async (req,res) => {
             await comment.update({comment: content, createdAt: modifyAt}, {where: {commentId: Number(commentId)}});
             res.json({success: true, message: '게시글을 수정하였습니다.'})
         } else{
-            return res.status(400).json({success: false, message: '해당 댓글을 작성한 사용자가 아닙니다.'})
+            return res.status(412).json({success: false, message: '해당 댓글을 작성한 사용자가 아닙니다.'})
         }
     } else{
         return res.status(404).json({success: false, message: '댓글이 존재하지 않습니다.'})
@@ -76,7 +76,7 @@ router.delete('/:commentId', authMiddleware, async (req, res) => {
             await comment.destroy({where: {commentId: Number(commentId)}})
             res.json({success: true, message: '댓글을 삭제하였습니다.'})
         } else{
-            return res.status(400).json({success: false, message: '해당 댓글을 작성한 사용자가 아닙니다.'})
+            return res.status(412).json({success: false, message: '해당 댓글을 작성한 사용자가 아닙니다.'})
         }
     } else{
         return res.status(404).json({success: false, message: '댓글 조회에 실패하였습니다.'})

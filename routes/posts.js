@@ -6,7 +6,6 @@ const { post } = require('../models');
 const { like } = require('../models');
 const { comment } = require('../models');
 const authMiddleware = require("../middlewares/auth-middleware");
-const user = require('../models/user');
 const sequelize = new Sequelize("database_development", "admin", "spa142857",{
     host: "sparta-gil.cylo4tomjgga.ap-northeast-2.rds.amazonaws.com",
     dialect: "mysql",
@@ -24,7 +23,7 @@ router.get('/', async (req, res) => {
             data: posts
         })
     }else{
-        return res.status(400).json({success: false, message: '게시글이 없습니다.'});
+        return res.status(404).json({success: false, message: '게시글이 없습니다.'});
     }    
 });
 
@@ -33,7 +32,7 @@ router.post('/', authMiddleware, async (req, res) => {
     // body : {"title": "글제목", "content": "안녕하세요 4번째 글입니다."}
     const {title, content } = req.body;
     if ([title, content].includes('')){
-        return res.status(400).json({success: false, message: '게시글 형식이 올바르지 않습니다.'});
+        return res.status(412).json({success: false, message: '게시글 형식이 올바르지 않습니다.'});
     }
     const userId  = res.locals.user.userId;
     const like = 0;
@@ -51,7 +50,7 @@ router.get('/:postId', async (req, res) => {
     if(posts){
         return res.json({'data': posts});
     }else{
-        return res.status(400).json({success: false, message: '데이터 형식이 올바르지 않습니다.'})
+        return res.status(400).json({success: false, message: '게시글 조회에 실패하였습니다.'})
     }
 })
 
@@ -61,6 +60,9 @@ router.put('/:postId', authMiddleware, async (req,res) => {
     const {postId} = req.params;
     const { title, content} = req.body;
     const user  = res.locals.user;
+    if ([title, content].includes('')){
+        return res.status(412).json({success: false, message: '게시글 형식이 올바르지 않습니다.'});
+    }
     const posts = await post.findOne({where: {postId: Number(postId)}});
     if(posts){
         if(posts.userId === user.userId){
@@ -68,10 +70,10 @@ router.put('/:postId', authMiddleware, async (req,res) => {
             await post.update({title: title, content: content, modifyAt: modifyAt}, {where: {postId: Number(postId)}});
             res.json({success: true, message: '게시글을 수정하였습니다.'})
         } else{
-            return res.status(400).json({success: false, message: '본인이 쓴 글이 아닙니다.'})
+            return res.status(412).json({success: false, message: '본인이 쓴 글이 아닙니다.'})
         }
     } else{
-        return res.status(404).json({success: false, message: '게시글 수정에 실패하였습니다.'})
+        return res.status(400).json({success: false, message: '게시글 수정에 실패하였습니다.'})
     }
 })
 
@@ -123,6 +125,9 @@ router.patch('/like', authMiddleware, async (req, res) => {
             nest:true,
         }
     )
+    if(!posts){
+        return res.status(404).json({success: false, message: '게시글이 존재하지 않습니다.'})
+    }
     res.json(posts);
 })
 
@@ -138,7 +143,7 @@ router.delete('/:postId', authMiddleware, async (req,res) => {
             await comment.destroy({postId: Number(postId)});
             res.json({success: true, message: '게시글을 삭제하였습니다.'})
         } else{
-            return res.status(400).json({success: false, message: '본인이 쓴 글이 아닙니다.'})
+            return res.status(412).json({success: false, message: '본인이 쓴 글이 아닙니다.'})
         }
     } else{
         return res.status(404).json({success: false, message: '게시글이 존재하지 않습니다.'})
