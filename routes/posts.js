@@ -4,6 +4,7 @@ const moment = require('moment');
 const Sequelize = require('sequelize');
 const { post } = require('../models');
 const { like } = require('../models');
+const { comment } = require('../models');
 const authMiddleware = require("../middlewares/auth-middleware");
 const user = require('../models/user');
 const sequelize = new Sequelize("database_development", "admin", "spa142857",{
