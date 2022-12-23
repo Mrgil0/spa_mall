@@ -22,7 +22,7 @@ router.get('/:postId', async (req, res) => {
 
 router.post('/:postId', authMiddleware, async (req, res) => {
     const { postId } = req.params;
-    const content = req.body.content;
+    const comment = req.body.content;
     const userId  = res.locals.user.userId;
 
     if(content === ''){
@@ -33,7 +33,7 @@ router.post('/:postId', authMiddleware, async (req, res) => {
         return res.status(400).json({success: false, message: '게시글이 존재하지 않습니다.'});
     }
     const createdAt = moment().utc();
-    await comment.create({postId, userId, comment: content, createdAt});
+    await comment.create({postId, userId, comment, createdAt});
     
     res.json({success: true, message: '댓글을 생성하였습니다.'})
 })
