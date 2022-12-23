@@ -46,7 +46,7 @@ router.put('/:commentId', authMiddleware, async (req,res) => {
     const {commentId} = req.params;
     const comment = req.body.content;
     const userId  = res.locals.user.userId;
-    if(content === ''){
+    if(comment === ''){
         return res.status(400).json({success: false, message: '댓글 내용을 입력해주세요.'})
     }
     const comments = await comment.findOne({where: {commentId: Number(commentId)}});
