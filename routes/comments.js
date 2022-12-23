@@ -29,7 +29,7 @@ router.post('/:postId', authMiddleware, async (req, res) => {
         return res.status(400).json({success: false, message: '댓글 내용을 입력해주세요.'});
     }
     const posts = await post.findOne({where: {postId: postId}});
-    if(posts){
+    if(!posts){
         return res.status(400).json({success: false, message: '게시글이 존재하지 않습니다.'});
     }
     const createdAt = moment().utc();
@@ -65,7 +65,7 @@ router.delete('/:commentId', authMiddleware, async (req, res) => {
     const comments = await comment.findOne({where: {commentId: Number(commentId)}});
     if(comments){
         if(comments.userId === userId){
-            await Comments.destroy({where: {commentId: Number(_commentId)}})
+            await comment.destroy({where: {commentId: Number(_commentId)}})
             res.json({success: true, message: '댓글을 삭제하였습니다.'})
         } else{
             return res.status(400).json({success: false, message: '해당 댓글을 작성한 사용자가 아닙니다.'})
