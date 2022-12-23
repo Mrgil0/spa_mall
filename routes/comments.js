@@ -22,7 +22,7 @@ router.get('/:postId', async (req, res) => {
 
 router.post('/:postId', authMiddleware, async (req, res) => {
     const { postId } = req.params;
-    const content = req.body.comment;
+    const content = req.body.content;
     const userId  = res.locals.user.userId;
 
     if(content === ''){
