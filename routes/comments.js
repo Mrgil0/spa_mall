@@ -21,11 +21,13 @@ router.get('/:postId', async (req, res) => {
 })
 
 router.post('/:postId', authMiddleware, async (req, res) => {
+    // Thunder Client api : sparta-gil.shop/comments/10
+    // body : {"content": "안녕하세요 4번째 댓글입니다."}
     const { postId } = req.params;
     const comment = req.body.content;
     const userId  = res.locals.user.userId;
 
-    if(content === ''){
+    if(comment === ''){
         return res.status(400).json({success: false, message: '댓글 내용을 입력해주세요.'});
     }
     const posts = await post.findOne({where: {postId: postId}});
@@ -39,8 +41,10 @@ router.post('/:postId', authMiddleware, async (req, res) => {
 })
 
 router.put('/:commentId', authMiddleware, async (req,res) => {
+    // Thunder Client api : sparta-gil.shop/comments/10
+    // body : {"content": "안녕하세요 수정된 댓글입니다."}
     const {commentId} = req.params;
-    const content = req.body.comment;
+    const comment = req.body.content;
     const userId  = res.locals.user.userId;
     if(content === ''){
         return res.status(400).json({success: false, message: '댓글 내용을 입력해주세요.'})
@@ -49,7 +53,7 @@ router.put('/:commentId', authMiddleware, async (req,res) => {
     if(comments){
         if(comments.userId === userId){
             const modifyAt = moment().utc();
-            await comment.update({content: content, createdAt: modifyAt}, {where: {commentId: Number(commentId)}});
+            await comment.update({comment: comment, createdAt: modifyAt}, {where: {commentId: Number(commentId)}});
             res.json({success: true, message: '게시글을 수정하였습니다.'})
         } else{
             return res.status(400).json({success: false, message: '해당 댓글을 작성한 사용자가 아닙니다.'})
